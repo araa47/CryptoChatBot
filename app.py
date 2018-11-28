@@ -1,6 +1,7 @@
 import dialogflow_v2 as dialogflow
 from google.protobuf.json_format import MessageToJson
 from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2 import service_account
 import json 
 import os
 import time
@@ -36,12 +37,15 @@ env = os.getenv("ENVIRONMENT")
 #print(project_id, coincap_refresh_interval_mins, SLACK_BOT_TOKEN, env)
 ## local envirnoment
 if env == "dev":
+
     secret = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    creds = ServiceAccountCredentials.from_json_keyfile_name(secret, scope)
+    creds = service_account.Credentials.from_service_account_file(secret)
+   # creds = ServiceAccountCredentials.from_service_account_file(secret, scope)
 else:
 ## Heroku 
     secret = json.loads((os.getenv("GOOGLE_APPLICATION_CREDENTIALS")))
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(secret, scope)
+    creds = service_account.Credentials.from_service_account_info(secret)
+    #creds = ServiceAccountCredentials.from_service_account_info(secret, scope)
 
 
 
@@ -100,7 +104,8 @@ def get_supply(coin):
 # Simple function that takes text and get the intent and response from google 
 def get_intent_from_text(project_id, session_id, text, language_code):
     # create a session 
-    session_client = dialogflow.SessionsClient()
+
+    session_client = dialogflow.SessionsClient(credentials=creds)
     session = session_client.session_path(project_id, session_id)
 
     # Convert text to the way dialogflow needs it 
