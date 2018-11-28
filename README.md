@@ -6,7 +6,7 @@ The program is a simple program that leverages the power of Dialogflow for natur
 
 ## Archietecture  
 
-User message --> Slack --> Python --> Dialogflow --> Python (check if intent is price for coin) -->  3rd Party API for prices --> Slack 
+User message --> Slack --> Python --> Dialogflow --> Python (check if intent is price/volume/stats for coin) -->  3rd Party API for prices --> Slack 
 
 1) The program starts off with a slack bot that listens to converstations on a slack channel and waits for the user to tag the bot. 
 
@@ -14,7 +14,7 @@ User message --> Slack --> Python --> Dialogflow --> Python (check if intent is 
 
 3) Dialogflow than classifes the intent of this message and also possible Entities that it recognizes and returns this information to python. 
 
-4) If any one of the entities defined is recognized by dialogflow, python grabs price data using Coincap's API. This process would sometimes be slow and make the crypto bot seem slow. So the python script just grabs the price information for all coins every 15 mins and stores it locally in a dictionary. When price information is needed, it simply uses this dictionary to get the current price. This ensures there is no network latency and that the bots response isnt any slower.
+4) If any one of the intents + entities defined is recognized by dialogflow, python grabs price data using Coincap's API. This process would sometimes be slow and make the crypto bot seem slow. So the python script just grabs the price information for all coins every 15 mins and stores it locally in a dictionary. When price information is needed, it simply uses this dictionary to get the current price. This ensures there is no network latency and that the bots response isnt any slower.
 
 ## Configuring Dataflow 
 
@@ -70,5 +70,8 @@ python3 app.py
 1) The program can simply be deployed into heroku without much configuration
 
 2) 
+```
+heroku ps:scale worker=1
+```
 
 
