@@ -55,8 +55,22 @@ slack_client = SlackClient(SLACK_BOT_TOKEN)
 # starterbot's user ID in Slack: value is assigned after the bot starts up
 starterbot_id = None
 
+# ## THis function was used to build all entities required for dialog flow, not used in production 
+# def build_coincap_entities_json(filename):
+#     api_url = "https://api.coincap.io/v2/assets"
+       
+#     response = requests.get(api_url)
+#     response = response.json()
 
+#     raw_list = []
 
+#     for item in response['data']:
+#         item_dict = {}
+#         item_dict['value'] = item['id']
+#         item_dict['synonyms'] = [item['id'], item['symbol'], item['name']]
+#         raw_list.append(item_dict)
+#     with open(filename, 'w') as outfile:  
+#         json.dump(raw_list, outfile)
 
 # This get prices 
 @cron.interval_schedule(minutes=coincap_refresh_interval_mins)
