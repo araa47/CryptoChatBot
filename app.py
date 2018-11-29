@@ -34,6 +34,16 @@ SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 env = os.getenv("ENVIRONMENT")
 
 
+
+intent_cofig = {  
+    "get_price": " The current price of %s is %s USD",
+    "get_volume": " The current 24 hour USD Volume for %s is %s USD",
+    "get_supply": " The current circulating supply of %s is %s coins"
+}
+
+
+
+
 #print(project_id, coincap_refresh_interval_mins, SLACK_BOT_TOKEN, env)
 ## local envirnoment
 if env == "dev":
@@ -57,7 +67,7 @@ starterbot_id = None
 
 # ## THis function was used to build all entities required for dialog flow, not used in production 
 # def build_coincap_entities_json(filename):
-#     api_url = "https://api.coincap.io/v2/assets"
+#     api_url = "https://api.coincap.io/v2/assets?limit=2000"
        
 #     response = requests.get(api_url)
 #     response = response.json()
@@ -70,29 +80,32 @@ starterbot_id = None
 #         item_dict['synonyms'] = [item['id'], item['symbol'], item['name']]
 #         raw_list.append(item_dict)
 #     with open(filename, 'w') as outfile:  
-#         json.dump(raw_list, outfile)
+#         json.dump(raw_list, outfile, indent=4)
 
 # This get prices 
 @cron.interval_schedule(minutes=coincap_refresh_interval_mins)
 def update_price_dict():
     global prices 
-    api_url = "https://api.coincap.io/v2/assets"
+    api_url = "https://api.coincap.io/v2/assets?limit=2000"
     try:
         response = requests.get(api_url)
         response = response.json()
         data = response.get('data', [])
         for item in data:
             coin = item.get('id')
-            price = item.get('priceUsd')
-            volume = item.get('volumeUsd24Hr')
-            supply = item.get('supply')
+            price = item.get('priceUsd', None)
+            volume = item.get('volumeUsd24Hr', None)
+            supply = item.get('supply', None)
             prices[coin] = {} 
-            prices[coin]['price'] = round(float(price), 4)
-            prices[coin]['volume'] = round(float(volume) , 4)
-            prices[coin]['supply'] = round(float(supply), 4)
+            if price is not None:
+                prices[coin]['price'] = round(float(price), 4)
+            if volume is not None:
+                prices[coin]['volume'] = round(float(volume) , 4)
+            if supply is not None:
+                prices[coin]['supply'] = round(float(supply), 4)
         print("Grabbed data from coincap.io!")
     except Exception as e:
-        print(e)
+        print("Exception ad update_price_dict() : %s"%e)
           
 
 
@@ -118,7 +131,7 @@ def get_supply(coin):
 # Simple function that takes text and get the intent and response from google 
 def get_intent_from_text(project_id, session_id, text, language_code):
     # create a session 
-
+    global intent_cofig
     session_client = dialogflow.SessionsClient(credentials=creds)
     session = session_client.session_path(project_id, session_id)
 
@@ -149,18 +162,25 @@ def get_intent_from_text(project_id, session_id, text, language_code):
         print(e)
         coin = None 
 
+    available_intents = intent_cofig.keys()
 
-    if detected_intent == "get_price" and coin:
-        price = get_price(coin)
-        bots_response = bots_response +" The current price of %s is %s USD"%(coin, "{:,}".format(price))
+    if (detected_intent in available_intents) and coin:
+        data = eval(detected_intent + "(coin)")
+        if type(data) == float:
+            data = "{:,}".format(data)
+        bots_response = bots_response + (intent_cofig[detected_intent])%(coin, data)
 
-    if detected_intent == "get_volume" and coin:
-        volume = get_volume(coin)
-        bots_response = bots_response + " The current 24 hour USD Volume for %s is %s USD"%(coin, "{:,}".format(volume))
+    # if detected_intent == "get_price" and coin:
+    #     price = get_price(coin)
+    #     bots_response = bots_response +" The current price of %s is %s USD"%(coin, "{:,}".format(price))
 
-    if detected_intent == "get_supply" and coin:
-        supply = get_supply(coin)
-        bots_response = bots_response + " There is currently %s %s circulating."%("{:,}".format(supply), coin)
+    # if detected_intent == "get_volume" and coin:
+    #     volume = get_volume(coin)
+    #     bots_response = bots_response + " The current 24 hour USD Volume for %s is %s USD"%(coin, "{:,}".format(volume))
+
+    # if detected_intent == "get_supply" and coin:
+    #     supply = get_supply(coin)
+    #     bots_response = bots_response + " There is currently %s %s circulating."%("{:,}".format(supply), coin)
 
 
     print('Response: %s'%bots_response)
