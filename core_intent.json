@@ -1,0 +1,6 @@
+{
+  "get_change": "In the past 24 hours %s has changed by %s percent",
+  "get_price": "The current price of %s is %s USD",
+  "get_supply": "The current circulating supply of %s is %s coins",
+  "get_volume": "The current 24 hour USD Volume for %s is %s USD"
+}

@@ -47,30 +47,22 @@ SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 # get environment 
 env = os.getenv("ENVIRONMENT")
 
-######################## Configurable var  for actions based on intent #######################
-
-intent_cofig = {  
-    "get_price": " The current price of %s is %s USD",
-    "get_volume": " The current 24 hour USD Volume for %s is %s USD",
-    "get_supply": " The current circulating supply of %s is %s coins",
-    "get_change": "In the past 24 hours %s has changed by %s percent"
-}
-
 ##############################################################################################
 
-# Configure creds for google 
+# Configure creds for google and get intents 
 if env == "dev":
     # if local secret is filename, read creds from file 
     secret = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     creds = service_account.Credentials.from_service_account_file(secret)
+    intent_config = json.loads(open('core_intent.json').read())
+    #intent_config = json.load('core_intent.json')
 else:
     # if production (heroku), secret is the json, read creds by loading json directly 
     secret = json.loads((os.getenv("GOOGLE_APPLICATION_CREDENTIALS")))
     creds = service_account.Credentials.from_service_account_info(secret)
-
+    intent_config = json.loads((os.getenv("INTENT_CONFIG")))
 # Configure creds and instantiate slack 
 slack_client = SlackClient(SLACK_BOT_TOKEN)
-
 
 
 # Enable cron sheduler 
@@ -129,6 +121,9 @@ def update_crypto_data():
     except Exception as e:
         print("Exception ad update_price_dict() : %s"%e)
           
+############################ Code your intents here ############################################
+
+
 # This function reads crypto_data and returns the price 
 def get_price(coin):
     global crypto_data 
@@ -159,12 +154,12 @@ def get_change(coin):
     return change 
 
 
-
+####################################################################################################
 
 # Simple function that takes text and get the intent, entities and response from Dialogflow (entities are actually inside parameters)
 def get_intent_from_text(project_id, session_id, text, language_code):
     # create a session 
-    global intent_cofig
+    global intent_config
     session_client = dialogflow.SessionsClient(credentials=creds)
     session = session_client.session_path(project_id, session_id)
 
@@ -193,7 +188,7 @@ def get_intent_from_text(project_id, session_id, text, language_code):
 
 ## This is where we decide what to do. We use intent config to check if intent is inside, if yes call the function that has the same name as the intent, return the data in format required
 def nlu_core(detected_intent, parameters, bots_response):
-    global intent_cofig
+    global intent_config
     print(parameters)
 
     # Check if coin is configured (This makes sure that there was an Entity identified by dialogflow )
@@ -204,13 +199,13 @@ def nlu_core(detected_intent, parameters, bots_response):
         print(e)
         coin = None 
     print(coin)
-    available_intents = intent_cofig.keys()
+    available_intents = intent_config.keys()
 
     if (detected_intent in available_intents) and coin:
         data = eval(detected_intent + "(coin)")
         if type(data) == float:
             data = "{:,}".format(data)
-        bots_response = bots_response + (intent_cofig[detected_intent])%(coin, data)
+        bots_response = bots_response + (intent_config[detected_intent])%(coin, data)
 
     print('Response: %s'%bots_response)
     return bots_response
