@@ -101,7 +101,7 @@ Once deployed simply go into your slack channel with the slack bot. Tag your bot
 
 ## Challenges 
 
-1) Waiting for a third party api to respond to get data seemed to slow down the bot by several magnitudes. In order to solve this I poll the information every 15 mins insatead using a python cron sheduler. This allows the bots to respond as fast as possible since it can simply grab the stat requested from the memory without having to wait for the third party api to respond. This time is also configurable incase more real-time information is needed. 
+1) Waiting for a third party api to respond to get data seemed to slow down the bot by several magnitudes. In order to solve this I poll the information every 15 mins instead using a python cron sheduler. This allows the bots to respond as fast as possible since it can simply grab the stat requested from the memory without having to wait for the third party api to respond. This time is also configurable incase more real-time information is needed. 
 
 2) Maintaining the project was getting difficult as soon as intents were being added. This was because everytime a new intent was added I had to add a conditional statement that would handle this. This does not seem scaleable so I made the intent configuration a config file called core_intent.json. This makes it easy to add intents, and all you need to do is after adding it to the configuration, create a simple function that takes in the entity name and returns the stat. If the intent name and functions name matched, the script would automatically start handling this new intent. 
 
