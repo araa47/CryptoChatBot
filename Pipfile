@@ -4,14 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-dialogflow = "*"
-slackclient = "*"
+google-cloud-dialogflow = "*"
+slackclient = "<2"
 slack-client = "*"
 python-dotenv = "*"
 "oauth2client" = "*"
-apscheduler = "==2.1.2"
+apscheduler = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3.13"
