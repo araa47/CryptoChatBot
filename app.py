@@ -1,4 +1,4 @@
-import dialogflow_v2 as dialogflow
+from google.cloud import dialogflow_v2 as dialogflow
 from google.protobuf.json_format import MessageToJson
 from oauth2client.service_account import ServiceAccountCredentials
 from google.oauth2 import service_account
@@ -17,7 +17,7 @@ import re
 from slackclient import SlackClient
 import requests 
 from dotenv import load_dotenv, find_dotenv
-from apscheduler.scheduler import Scheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 ################# Global Variables that change in value #####################################
@@ -66,7 +66,7 @@ slack_client = SlackClient(SLACK_BOT_TOKEN)
 
 
 # Enable cron sheduler 
-cron = Scheduler(daemon=True)
+cron = BackgroundScheduler(daemon=True)
 # Explicitly kick off the background thread
 cron.start()
 
@@ -92,7 +92,7 @@ def build_coincap_entities_json(filename):
 
 
 # This function grabs data from coincap every x mins, and locally stors all the stats required   
-@cron.interval_schedule(minutes=coincap_refresh_interval_mins)
+@cron.scheduled_job('interval', minutes=coincap_refresh_interval_mins)
 def update_crypto_data():
     global crypto_data 
     api_url = "https://api.coincap.io/v2/assets?limit=2000"
@@ -180,7 +180,7 @@ def get_intent_from_text(project_id, session_id, text, language_code):
     detected_intent = response.query_result.intent.display_name
     detected_intent_confidence = response.query_result.intent_detection_confidence
     bots_response = str(response.query_result.fulfillment_text)
-    parameters = MessageToJson(response.query_result.parameters)
+    parameters = MessageToJson(response.query_result._pb.parameters)
 
     # Return these parameters 
     return detected_intent, parameters, bots_response  
